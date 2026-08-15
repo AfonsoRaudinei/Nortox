@@ -246,8 +246,7 @@
 
   <!-- TABS -->
   <nav class="tabs" id="tabs">
-    <button class="tab active" data-cat="todos">Todos</button>
-    <button class="tab" data-cat="milho">Milho</button>
+    <button class="tab active" data-cat="milho">Milho</button>
     <button class="tab" data-cat="sorgo">Sorgo</button>
     <button class="tab" data-cat="nutricao">Nutrição</button>
     <button class="tab" data-cat="defensivos">Defensivos</button>
@@ -275,16 +274,34 @@
 <script>
 /* ══════════════════════════════════════════════════
    FOTOS DO CATÁLOGO
-   Cole a URL da imagem em cada posição.
+   Caminho relativo à pasta "imagem" (mesmo repositório do index.html).
+   Padrão de nome: categoria-01.jpg, categoria-02.jpg...
    Posições vazias ('') são ignoradas — não ocupam
    espaço nem entram na rotação do carrossel.
    ══════════════════════════════════════════════════ */
 const FOTOS = {
-  milho:      ['', '', '', '', '', '', '', '', '', ''],   // 10 espaços
-  sorgo:      ['', '', '', '', ''],
-  nutricao:   ['', '', '', '', ''],
-  defensivos: ['', '', '', '', ''],
-  solos:      ['', '', '', '', ''],
+  milho: [
+    'imagem/milho-01.jpg', 'imagem/milho-02.jpg', 'imagem/milho-03.jpg',
+    'imagem/milho-04.jpg', 'imagem/milho-05.jpg', 'imagem/milho-06.jpg',
+    'imagem/milho-07.jpg', 'imagem/milho-08.jpg', 'imagem/milho-09.jpg',
+    'imagem/milho-10.jpg',
+  ],
+  sorgo: [
+    'imagem/sorgo-01.jpg', 'imagem/sorgo-02.jpg', 'imagem/sorgo-03.jpg',
+    'imagem/sorgo-04.jpg', 'imagem/sorgo-05.jpg',
+  ],
+  nutricao: [
+    'imagem/nutricao-01.jpg', 'imagem/nutricao-02.jpg', 'imagem/nutricao-03.jpg',
+    'imagem/nutricao-04.jpg', 'imagem/nutricao-05.jpg',
+  ],
+  defensivos: [
+    'imagem/defensivos-01.jpg', 'imagem/defensivos-02.jpg', 'imagem/defensivos-03.jpg',
+    'imagem/defensivos-04.jpg', 'imagem/defensivos-05.jpg',
+  ],
+  solos: [
+    'imagem/solos-01.jpg', 'imagem/solos-02.jpg', 'imagem/solos-03.jpg',
+    'imagem/solos-04.jpg', 'imagem/solos-05.jpg',
+  ],
 };
 
 const ROTULOS = {
@@ -292,30 +309,36 @@ const ROTULOS = {
   defensivos: 'Defensivos', solos: 'Solos',
 };
 
-let activeCat = 'todos', current = 0, timer = null;
+let activeCat = 'milho', current = 0, timer = null;
 const slidesEl = document.getElementById('slides');
 const dotsEl   = document.getElementById('dots');
 
 function fotosDaCategoria() {
-  if (activeCat === 'todos') {
-    return Object.keys(FOTOS).flatMap(c => FOTOS[c].filter(Boolean));
-  }
   return FOTOS[activeCat].filter(Boolean);
 }
 
-function build() {
-  const fotos = fotosDaCategoria();
+function testarImagem(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload  = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = src;
+  });
+}
+
+async function build() {
+  const candidatos = fotosDaCategoria();
+  const resultados = await Promise.all(candidatos.map(testarImagem));
+  const fotos = candidatos.filter((_, i) => resultados[i]);
+
   slidesEl.innerHTML = '';
   dotsEl.innerHTML = '';
   current = 0;
   clearInterval(timer);
 
   if (!fotos.length) {
-    // nenhum espaço preenchido nesta categoria
-    const total = activeCat === 'todos'
-      ? Object.values(FOTOS).flat().length
-      : FOTOS[activeCat].length;
-    const nome = activeCat === 'todos' ? 'catálogo' : ROTULOS[activeCat];
+    // nenhuma foto encontrada nesta categoria ainda
+    const nome = ROTULOS[activeCat];
 
     const s = document.createElement('div');
     s.className = 'slide is-active';
@@ -328,8 +351,8 @@ function build() {
             <path d="M21 15l-5-5L5 21"/>
           </svg>
         </div>
-        <div class="slot-txt">Adicione as fotos de ${nome}</div>
-        <div class="slot-count">${total} espaços disponíveis</div>
+        <div class="slot-txt">Fotos de ${nome} não encontradas</div>
+        <div class="slot-count">Verifique se os arquivos estão na pasta "imagem"</div>
       </div>`;
     slidesEl.appendChild(s);
     dotsEl.classList.add('hidden');
