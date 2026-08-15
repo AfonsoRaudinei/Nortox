@@ -37,48 +37,63 @@
 
   /* ══ BANNER ══ */
   .banner {
-    flex-shrink: 0; position: relative;
+    flex-shrink: 0;
     width: 100%; height: 84px;
-    background: var(--gray-bg);
     border-bottom: 1px solid var(--gray-line);
-    overflow: hidden;
+    display: flex;
     animation: dropIn .55s .05s cubic-bezier(.22,.61,.36,1) both;
   }
   @keyframes dropIn {
     from { opacity: 0; transform: translateY(-14px) }
     to   { opacity: 1; transform: translateY(0) }
   }
+  /* 70% — banner */
+  .banner-img-wrap {
+    width: 70%; height: 100%; overflow: hidden; position: relative;
+  }
   .banner-img {
     width: 100%; height: 100%;
-    object-fit: cover; object-position: center;
-    display: block;
+    object-fit: cover; object-position: center; display: block;
     animation: kenBurns 18s ease-in-out infinite alternate;
   }
   @keyframes kenBurns {
-    from { transform: scale(1)    translateX(0) }
+    from { transform: scale(1) translateX(0) }
     to   { transform: scale(1.07) translateX(-1.5%) }
   }
-  .banner-empty {
+  .banner-ph {
     width: 100%; height: 100%;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 3px;
-    background: var(--gray-bg);
-    cursor: pointer; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--gray-bg); position: relative; overflow: hidden;
   }
-  /* shimmer sweep on empty banner */
-  .banner-empty::after {
-    content: '';
-    position: absolute; inset: 0;
+  .banner-ph::after {
+    content: ''; position: absolute; inset: 0;
     background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.85) 50%, transparent 65%);
     transform: translateX(-100%);
     animation: sweep 3.4s ease-in-out infinite;
   }
   @keyframes sweep {
-    0%, 55%  { transform: translateX(-100%) }
-    100%     { transform: translateX(100%) }
+    0%, 55% { transform: translateX(-100%) }
+    100%    { transform: translateX(100%) }
   }
-  .banner-empty-txt { font-size: .78rem; font-weight: 600; color: var(--text-sec); z-index: 1 }
-  .banner-empty-sub { font-size: .64rem; color: #9a9aa0; z-index: 1 }
+  .banner-ph-txt { font-size: .72rem; font-weight: 500; color: var(--text-sec); z-index: 1 }
+  /* 30% — logo */
+  .banner-logo-wrap {
+    width: 30%; height: 100%;
+    background: var(--white);
+    border-left: 1px solid var(--gray-line);
+    display: flex; align-items: center; justify-content: center;
+    padding: 10px;
+  }
+  .banner-logo {
+    max-width: 100%; max-height: 100%;
+    object-fit: contain; display: block;
+  }
+  .banner-logo-ph {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--gray-bg);
+  }
+  .banner-logo-ph-txt { font-size: .6rem; color: var(--text-sec); text-align: center; line-height: 1.4 }
 
   /* ══ TABS ══ */
   .tabs {
@@ -244,10 +259,17 @@
 <body>
 <div class="app">
 
-  <!-- BANNER -->
+  <!-- BANNER: 70% imagem | 30% logo -->
   <div class="banner" id="banner">
-    <div class="banner-empty" id="bannerEmpty">
-      <div class="banner-empty-txt">Toque para inserir seu banner</div>
+    <div class="banner-img-wrap" id="bannerImgWrap">
+      <div class="banner-ph" id="bannerPh">
+        <span class="banner-ph-txt">banner.jpg</span>
+      </div>
+    </div>
+    <div class="banner-logo-wrap" id="bannerLogoWrap">
+      <div class="banner-logo-ph" id="bannerLogoPh">
+        <span class="banner-logo-ph-txt">logo.png</span>
+      </div>
     </div>
   </div>
 
@@ -443,6 +465,32 @@ tabsEl.addEventListener('click', e => {
   activeCat = tab.dataset.cat;
   build();
 });
+
+/* ══ BANNER + LOGO — carrega automaticamente ══ */
+function carregarBanner() {
+  const wrap = document.getElementById('bannerImgWrap');
+  const ph   = document.getElementById('bannerPh');
+  const img  = document.createElement('img');
+  img.className = 'banner-img';
+  img.src = 'imagem/banner.jpg';
+  img.alt = '';
+  img.onload  = () => { ph.remove(); wrap.appendChild(img); };
+  img.onerror = () => {};
+}
+
+function carregarLogo() {
+  const wrap = document.getElementById('bannerLogoWrap');
+  const ph   = document.getElementById('bannerLogoPh');
+  const img  = document.createElement('img');
+  img.className = 'banner-logo';
+  img.src = 'imagem/logo.png';
+  img.alt = '';
+  img.onload  = () => { ph.remove(); wrap.appendChild(img); };
+  img.onerror = () => {};
+}
+
+carregarBanner();
+carregarLogo();
 
 /* init */
 build();
