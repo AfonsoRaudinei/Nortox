@@ -49,7 +49,7 @@
   }
   /* 70% — banner */
   .banner-img-wrap {
-    width: 70%; height: 100%; overflow: hidden; position: relative;
+    width: 80%; height: 100%; overflow: hidden; position: relative;
   }
   .banner-img {
     width: 100%; height: 100%;
@@ -78,9 +78,8 @@
   .banner-ph-txt { font-size: .72rem; font-weight: 500; color: var(--text-sec); z-index: 1 }
   /* 30% — logo */
   .banner-logo-wrap {
-    width: 30%; height: 100%;
-    background: var(--white);
-    border-left: 1px solid var(--gray-line);
+    width: 20%; height: 100%;
+    background: transparent;
     display: flex; align-items: center; justify-content: center;
     padding: 10px;
   }
@@ -91,7 +90,7 @@
   .banner-logo-ph {
     width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center;
-    background: var(--gray-bg);
+    background: transparent;
   }
   .banner-logo-ph-txt { font-size: .6rem; color: var(--text-sec); text-align: center; line-height: 1.4 }
 
@@ -346,29 +345,15 @@ function fotosDaCategoria() {
   return FOTOS[activeCat].filter(Boolean);
 }
 
-function testarImagem(src) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload  = () => resolve(true);
-    img.onerror = () => resolve(false);
-    img.src = src;
-  });
-}
-
-async function build() {
-  const candidatos = fotosDaCategoria();
-  const resultados = await Promise.all(candidatos.map(testarImagem));
-  const fotos = candidatos.filter((_, i) => resultados[i]);
-
+function build() {
+  const fotos = fotosDaCategoria();
   slidesEl.innerHTML = '';
   dotsEl.innerHTML = '';
   current = 0;
   clearInterval(timer);
 
   if (!fotos.length) {
-    // nenhuma foto encontrada nesta categoria ainda
     const nome = ROTULOS[activeCat];
-
     const s = document.createElement('div');
     s.className = 'slide is-active';
     s.innerHTML = `
@@ -388,8 +373,6 @@ async function build() {
     return;
   }
 
-  dotsEl.classList.toggle('hidden', fotos.length < 2);
-
   fotos.forEach((src, i) => {
     const s = document.createElement('div');
     s.className = 'slide' + (i === 0 ? ' is-active' : '');
@@ -404,6 +387,13 @@ async function build() {
     img.src = src;
     img.alt = '';
     img.loading = i === 0 ? 'eager' : 'lazy';
+    // se a imagem não existir, esconde o slide e o dot correspondente
+    img.onerror = () => {
+      s.style.display = 'none';
+      const idx = [...slidesEl.children].indexOf(s);
+      const dot = dotsEl.children[idx];
+      if (dot) dot.style.display = 'none';
+    };
     s.appendChild(img);
     slidesEl.appendChild(s);
 
@@ -412,20 +402,30 @@ async function build() {
     dotsEl.appendChild(d);
   });
 
+  dotsEl.classList.toggle('hidden', fotos.length < 2);
   goTo(0, false);
   if (fotos.length > 1) startAuto();
 }
 
+function visíveis() {
+  return [...slidesEl.children].filter(s => s.style.display !== 'none');
+}
+
 function goTo(idx, animate = true) {
-  const total = slidesEl.children.length;
-  if (!total) return;
-  current = (idx + total) % total;
+  const vis = visíveis();
+  if (!vis.length) return;
+  current = (idx + vis.length) % vis.length;
+
+  const alvo = vis[current];
+  const posição = [...slidesEl.children].indexOf(alvo);
 
   if (!animate) slidesEl.style.transition = 'none';
-  slidesEl.style.transform = `translateX(-${current * 100}%)`;
+  slidesEl.style.transform = `translateX(-${posição * 100}%)`;
   if (!animate) requestAnimationFrame(() => slidesEl.style.transition = '');
 
-  [...slidesEl.children].forEach((s, i) => s.classList.toggle('is-active', i === current));
+  [...slidesEl.children].forEach(s => s.classList.remove('is-active'));
+  alvo.classList.add('is-active');
+
   [...dotsEl.children].forEach((d, i) => d.classList.toggle('active', i === current));
 }
 
